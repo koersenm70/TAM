@@ -1,5 +1,8 @@
+import os
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 
 from database import engine, Base, SessionLocal
 from auth import get_current_user, hash_password
@@ -18,7 +21,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000"],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,14 +42,31 @@ app.include_router(admin_router)  # admin routes have their own dependency
 app.include_router(export.router)
 
 
-@app.get("/")
-def root():
-    return {"name": "Market Research & Lead Generation API", "version": "1.0.0", "docs": "/docs"}
-
-
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+# ── Serve React frontend (production build) ──────────────────────────────────
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+if os.path.isdir(STATIC_DIR):
+    app.mount("/assets", StaticFiles(directory=os.path.join(STATIC_DIR, "assets")), name="assets")
+
+    @app.get("/")
+    def serve_index():
+        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+
+    # Catch-all: serve index.html for any unmatched path (React Router)
+    @app.api_route("/{full_path:path}", methods=["GET"])
+    def serve_spa(full_path: str):
+        file_path = os.path.join(STATIC_DIR, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+else:
+    @app.get("/")
+    def root():
+        return {"name": "Market Research & Lead Generation API", "version": "1.0.0", "docs": "/docs"}
 
 
 # ── Create default admin on first startup ─────────────────────────────────

@@ -1,4 +1,7 @@
-const BASE = '/api'
+// In production the frontend is served by the FastAPI backend itself,
+// so API calls go to the same origin under /auth, /leads, etc. (no /api prefix).
+// In local dev, Vite proxies /api → localhost:8000.
+const BASE = import.meta.env.DEV ? '/api' : ''
 
 function getToken() {
   return localStorage.getItem('leadgen_token')
