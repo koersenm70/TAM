@@ -1,13 +1,23 @@
 import io
 import pandas as pd
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 from database import get_db
 from models import Lead
+from auth import decode_token
 
 router = APIRouter(prefix="/export", tags=["export"])
+
+
+def _verify_token_param(token: Optional[str], db: Session) -> None:
+    """Allow auth via ?token= query param for direct download links."""
+    if not token:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    payload = decode_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 EXPORT_FIELDS = [
     "id", "company_name", "contact_name", "email", "phone", "website",
@@ -49,12 +59,14 @@ def get_filtered_leads(
 
 @router.get("/csv")
 def export_csv(
+    token: Optional[str] = Query(None),
     status: Optional[str] = None,
     source: Optional[str] = None,
     industry: Optional[str] = None,
     ids: Optional[str] = Query(None, description="Comma-separated lead IDs"),
     db: Session = Depends(get_db),
 ):
+    _verify_token_param(token, db)
     leads = get_filtered_leads(db, status, source, industry, ids)
     df = leads_to_df(leads)
     buf = io.StringIO()
@@ -69,12 +81,14 @@ def export_csv(
 
 @router.get("/excel")
 def export_excel(
+    token: Optional[str] = Query(None),
     status: Optional[str] = None,
     source: Optional[str] = None,
     industry: Optional[str] = None,
     ids: Optional[str] = Query(None, description="Comma-separated lead IDs"),
     db: Session = Depends(get_db),
 ):
+    _verify_token_param(token, db)
     leads = get_filtered_leads(db, status, source, industry, ids)
     df = leads_to_df(leads)
     buf = io.BytesIO()

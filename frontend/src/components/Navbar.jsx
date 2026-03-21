@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 const NAV = [
   { to: '/', label: '📊 Dashboard' },
@@ -8,6 +9,14 @@ const NAV = [
 ]
 
 export default function Navbar() {
+  const { user, isAdmin, logout } = useAuth()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
   return (
     <nav style={{
       background: 'var(--surface)',
@@ -24,6 +33,7 @@ export default function Navbar() {
       <span style={{ fontWeight: 700, fontSize: 16, color: 'var(--accent)', marginRight: 24, whiteSpace: 'nowrap' }}>
         🚀 LeadGen
       </span>
+
       {NAV.map(({ to, label }) => (
         <NavLink
           key={to}
@@ -43,6 +53,49 @@ export default function Navbar() {
           {label}
         </NavLink>
       ))}
+
+      {isAdmin && (
+        <NavLink
+          to="/admin"
+          style={({ isActive }) => ({
+            padding: '6px 14px',
+            borderRadius: 8,
+            color: isActive ? '#fff' : '#a78bfa',
+            background: isActive ? '#7c3aed' : 'rgba(124,58,237,0.1)',
+            fontWeight: isActive ? 600 : 500,
+            fontSize: 14,
+            transition: 'all 0.15s',
+            whiteSpace: 'nowrap',
+          })}
+        >
+          👑 Admin
+        </NavLink>
+      )}
+
+      {/* Spacer */}
+      <div style={{ flex: 1 }} />
+
+      {/* User info + logout */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{user?.full_name || user?.username}</div>
+          {user?.is_admin && <div style={{ fontSize: 11, color: '#a78bfa' }}>Administrator</div>}
+        </div>
+        <button
+          onClick={handleLogout}
+          style={{
+            background: 'var(--surface2)',
+            border: '1px solid var(--border)',
+            color: 'var(--text-muted)',
+            padding: '6px 12px',
+            borderRadius: 8,
+            fontSize: 13,
+            cursor: 'pointer',
+          }}
+        >
+          Sign out
+        </button>
+      </div>
     </nav>
   )
 }
