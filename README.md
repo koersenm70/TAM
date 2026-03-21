@@ -1,3 +1,12 @@
+---
+title: TAM
+emoji: 📊
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # Market Research & Lead Generation App
 
 Automate market research, collect data from multiple sources, and manage leads — all in one place.
