@@ -16,7 +16,8 @@ export function AuthProvider({ children }) {
     form.append('username', username)
     form.append('password', password)
 
-    const res = await fetch('/api/auth/token', {
+    const base = import.meta.env.DEV ? '/api' : ''
+    const res = await fetch(`${base}/auth/token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: form,
@@ -45,7 +46,8 @@ export function AuthProvider({ children }) {
   // Refresh user info from API on mount (validates token is still good)
   useEffect(() => {
     if (!token) return
-    fetch('/api/auth/me', { headers: { Authorization: `Bearer ${token}` } })
+    const base = import.meta.env.DEV ? '/api' : ''
+    fetch(`${base}/auth/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => {
         if (r.status === 401) { logout(); return null }
         return r.json()
