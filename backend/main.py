@@ -56,9 +56,13 @@ if os.path.isdir(STATIC_DIR):
     def serve_index():
         return FileResponse(os.path.join(STATIC_DIR, "index.html"))
 
-    # Catch-all: serve index.html for any unmatched path (React Router)
-    @app.api_route("/{full_path:path}", methods=["GET"])
+    # Catch-all: serve index.html for frontend routes (React Router)
+    # Excludes API paths so POST/PUT/DELETE requests are not intercepted
+    @app.get("/{full_path:path}")
     def serve_spa(full_path: str):
+        if full_path.startswith(("auth/", "leads", "import", "scrape", "export", "analytics", "admin", "health")):
+            from fastapi import HTTPException
+            raise HTTPException(status_code=404)
         file_path = os.path.join(STATIC_DIR, full_path)
         if os.path.isfile(file_path):
             return FileResponse(file_path)
