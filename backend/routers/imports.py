@@ -103,7 +103,7 @@ def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def df_to_leads(df: pd.DataFrame, source: str) -> list[Lead]:
+def df_to_leads(df: pd.DataFrame, source: str, project_id: Optional[int] = None) -> list[Lead]:
     df = normalize_columns(df)
     df = df.where(pd.notna(df), None)
     leads = []
@@ -136,6 +136,8 @@ def df_to_leads(df: pd.DataFrame, source: str) -> list[Lead]:
         if not useful:
             continue
 
+        if project_id is not None:
+            data["project_id"] = project_id
         leads.append(Lead(**data))
 
     return leads
@@ -145,6 +147,7 @@ def df_to_leads(df: pd.DataFrame, source: str) -> list[Lead]:
 async def import_csv(
     file: UploadFile = File(...),
     source_label: Optional[str] = Form("csv"),
+    project_id: Optional[int] = Form(None),
     db: Session = Depends(get_db),
 ):
     if not file.filename.lower().endswith(".csv"):
@@ -156,7 +159,7 @@ async def import_csv(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse CSV: {e}")
 
-    leads = df_to_leads(df, source_label or "csv")
+    leads = df_to_leads(df, source_label or "csv", project_id)
     db.add_all(leads)
     db.commit()
     return {"imported": len(leads), "total_rows": len(df)}
@@ -167,6 +170,7 @@ async def import_excel(
     file: UploadFile = File(...),
     sheet_name: Optional[str] = Form(None),
     source_label: Optional[str] = Form("excel"),
+    project_id: Optional[int] = Form(None),
     db: Session = Depends(get_db),
 ):
     if not file.filename.lower().endswith((".xlsx", ".xls")):
@@ -178,7 +182,7 @@ async def import_excel(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse Excel: {e}")
 
-    leads = df_to_leads(df, source_label or "excel")
+    leads = df_to_leads(df, source_label or "excel", project_id)
     db.add_all(leads)
     db.commit()
     return {"imported": len(leads), "total_rows": len(df)}
@@ -187,6 +191,7 @@ async def import_excel(
 @router.post("/linkedin")
 async def import_linkedin(
     file: UploadFile = File(...),
+    project_id: Optional[int] = Form(None),
     db: Session = Depends(get_db),
 ):
     """
@@ -202,7 +207,7 @@ async def import_linkedin(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to parse LinkedIn CSV: {e}")
 
-    leads = df_to_leads(df, "linkedin")
+    leads = df_to_leads(df, "linkedin", project_id)
     db.add_all(leads)
     db.commit()
     return {"imported": len(leads), "total_rows": len(df)}

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Boolean
+from sqlalchemy import Column, Integer, String, Text, DateTime, JSON, Boolean, ForeignKey
 from sqlalchemy.sql import func
 from pydantic import BaseModel
 from typing import Optional, Any
@@ -52,11 +52,46 @@ class PasswordReset(BaseModel):
     new_password: str
 
 
+# ── Project model ────────────────────────────────────────────────────────────
+class Project(Base):
+    __tablename__ = "projects"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, index=True)
+    description = Column(Text, nullable=True)
+    color = Column(String, default="#0073ea")
+    created_at = Column(DateTime, server_default=func.now())
+
+
+class ProjectCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    color: Optional[str] = "#0073ea"
+
+
+class ProjectUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    color: Optional[str] = None
+
+
+class ProjectResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str] = None
+    color: str
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
 # SQLAlchemy ORM Model
 class Lead(Base):
     __tablename__ = "leads"
 
     id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True)
     company_name = Column(String, index=True, nullable=True)
     contact_name = Column(String, nullable=True)
     email = Column(String, index=True, nullable=True)
@@ -78,6 +113,7 @@ class ScrapingJob(Base):
     __tablename__ = "scraping_jobs"
 
     id = Column(Integer, primary_key=True, index=True)
+    project_id = Column(Integer, ForeignKey("projects.id", ondelete="SET NULL"), nullable=True, index=True)
     url = Column(String)
     status = Column(String, default="pending")  # pending, running, completed, failed
     leads_found = Column(Integer, default=0)
@@ -89,6 +125,7 @@ class ScrapingJob(Base):
 
 # Pydantic Schemas
 class LeadBase(BaseModel):
+    project_id: Optional[int] = None
     company_name: Optional[str] = None
     contact_name: Optional[str] = None
     email: Optional[str] = None
@@ -114,6 +151,7 @@ class LeadUpdate(LeadBase):
 
 class LeadResponse(LeadBase):
     id: int
+    project_id: Optional[int] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

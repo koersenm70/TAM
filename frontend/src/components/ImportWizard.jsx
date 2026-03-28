@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react'
 import { importApi } from '../api'
+import { useProject } from '../contexts/ProjectContext'
 
 const TABS = [
   { id: 'csv', label: '📄 CSV File', desc: 'Import any CSV with company/contact data' },
@@ -57,6 +58,7 @@ function LinkedInTip() {
 }
 
 export default function ImportWizard() {
+  const { activeProject } = useProject()
   const [tab, setTab] = useState('csv')
   const [file, setFile] = useState(null)
   const [result, setResult] = useState(null)
@@ -75,10 +77,11 @@ export default function ImportWizard() {
     setResult(null)
     setError(null)
     try {
+      const pid = activeProject?.id ?? null
       let res
-      if (tab === 'csv') res = await importApi.csv(file)
-      else if (tab === 'excel') res = await importApi.excel(file)
-      else res = await importApi.linkedin(file)
+      if (tab === 'csv') res = await importApi.csv(file, 'csv', pid)
+      else if (tab === 'excel') res = await importApi.excel(file, 'excel', pid)
+      else res = await importApi.linkedin(file, pid)
       setResult(res)
       setFile(null)
     } catch (e) {
@@ -93,7 +96,10 @@ export default function ImportWizard() {
   return (
     <div className="page">
       <div className="page-header">
-        <h1 className="page-title">Import Leads</h1>
+        <div>
+          <h1 className="page-title">Import Leads</h1>
+          {activeProject && <div className="page-subtitle">Importing into: <strong>{activeProject.name}</strong></div>}
+        </div>
       </div>
 
       {/* Tabs */}

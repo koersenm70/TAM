@@ -26,25 +26,38 @@ export default function Login() {
     <div style={{
       minHeight: '100vh',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
       background: 'var(--bg)',
-      padding: 24,
     }}>
-      <div style={{ width: '100%', maxWidth: 400 }}>
-        {/* Logo / Title */}
-        <div style={{ textAlign: 'center', marginBottom: 36 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>🚀</div>
-          <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--text)' }}>LeadGen</h1>
-          <p style={{ color: 'var(--text-muted)', marginTop: 6, fontSize: 14 }}>
-            Market Research & Lead Generation
-          </p>
+      {/* Left panel */}
+      <div style={{
+        width: 420,
+        background: 'var(--sidebar-bg)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 48,
+        color: '#fff',
+      }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>&#128640;</div>
+        <h1 style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>LeadGen</h1>
+        <p style={{ color: 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.6 }}>
+          Market Research &amp; Lead Generation platform. Find, import, and manage your sales pipeline.
+        </p>
+        <div style={{ marginTop: 48, display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
+          {['Import CSV, Excel & LinkedIn', 'Web scraping & lead discovery', 'Project-based organisation', 'Export & CRM-ready data'].map(f => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.7)', fontSize: 13 }}>
+              <span style={{ color: 'var(--green)', fontWeight: 700 }}>&#10003;</span> {f}
+            </div>
+          ))}
         </div>
+      </div>
 
-        <div className="card" style={{ padding: 32 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 24, textAlign: 'center' }}>
-            Sign in to your account
-          </h2>
+      {/* Right panel */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 48 }}>
+        <div style={{ width: '100%', maxWidth: 380 }}>
+          <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>Sign in</h2>
+          <p style={{ color: 'var(--text-muted)', marginBottom: 28, fontSize: 14 }}>Welcome back — enter your credentials to continue.</p>
 
           {error && <div className="alert alert-error">{error}</div>}
 
@@ -60,7 +73,6 @@ export default function Login() {
                 disabled={loading}
               />
             </div>
-
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label>Password</label>
               <input
@@ -72,21 +84,20 @@ export default function Login() {
                 disabled={loading}
               />
             </div>
-
             <button
               type="submit"
               className="btn-primary"
               disabled={loading}
-              style={{ marginTop: 8, padding: '12px', fontSize: 15, width: '100%' }}
+              style={{ marginTop: 4, padding: '11px', fontSize: 14 }}
             >
               {loading ? <span className="spinner" /> : 'Sign In'}
             </button>
           </form>
-        </div>
 
-        <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: 20, fontSize: 12 }}>
-          Forgot your password? Contact your administrator.
-        </p>
+          <p style={{ color: 'var(--text-light)', marginTop: 24, fontSize: 12, textAlign: 'center' }}>
+            Forgot your password? Contact your administrator.
+          </p>
+        </div>
       </div>
     </div>
   )

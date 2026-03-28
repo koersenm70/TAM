@@ -9,6 +9,7 @@ from auth import get_current_user, hash_password
 from routers import leads, imports, scraping, export, analytics
 from routers.auth_router import router as auth_router
 from routers.admin import router as admin_router
+from routers.projects import router as projects_router
 
 # Create all DB tables
 Base.metadata.create_all(bind=engine)
@@ -32,6 +33,7 @@ app.include_router(auth_router)
 
 # Protected routes (require login)
 _auth = [Depends(get_current_user)]
+app.include_router(projects_router, dependencies=_auth)
 app.include_router(leads.router, dependencies=_auth)
 app.include_router(imports.router, dependencies=_auth)
 app.include_router(scraping.router, dependencies=_auth)
@@ -60,7 +62,7 @@ if os.path.isdir(STATIC_DIR):
     # Excludes API paths so POST/PUT/DELETE requests are not intercepted
     @app.get("/{full_path:path}")
     def serve_spa(full_path: str):
-        if full_path.startswith(("auth/", "leads", "import", "scrape", "export", "analytics", "admin", "health")):
+        if full_path.startswith(("auth/", "leads", "import", "scrape", "export", "analytics", "admin", "health", "projects")):
             from fastapi import HTTPException
             raise HTTPException(status_code=404)
         file_path = os.path.join(STATIC_DIR, full_path)

@@ -16,10 +16,13 @@ def list_leads(
     status: Optional[str] = None,
     source: Optional[str] = None,
     industry: Optional[str] = None,
+    project_id: Optional[int] = None,
     db: Session = Depends(get_db),
 ):
     query = db.query(Lead)
 
+    if project_id is not None:
+        query = query.filter(Lead.project_id == project_id)
     if search:
         term = f"%{search}%"
         query = query.filter(

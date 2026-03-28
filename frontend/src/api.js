@@ -1,6 +1,3 @@
-// In production the frontend is served by the FastAPI backend itself,
-// so API calls go to the same origin under /auth, /leads, etc. (no /api prefix).
-// In local dev, Vite proxies /api → localhost:8000.
 const BASE = import.meta.env.DEV ? '/api' : ''
 
 function getToken() {
@@ -11,7 +8,6 @@ async function request(path, options = {}) {
   const token = getToken()
   const headers = { ...(options.headers || {}) }
   if (token) headers['Authorization'] = `Bearer ${token}`
-  // Don't set Content-Type for FormData (browser sets it with boundary)
   if (options.body && !(options.body instanceof FormData)) {
     headers['Content-Type'] = headers['Content-Type'] || 'application/json'
   }
@@ -33,6 +29,14 @@ async function request(path, options = {}) {
   return res.json()
 }
 
+// Projects
+export const projectsApi = {
+  list: () => request('/projects'),
+  create: (data) => request('/projects', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id, data) => request(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  delete: (id) => request(`/projects/${id}`, { method: 'DELETE' }),
+}
+
 // Leads
 export const leadsApi = {
   list: (params = {}) => {
@@ -50,21 +54,24 @@ export const leadsApi = {
 
 // Import
 export const importApi = {
-  csv: (file, sourceLabel = 'csv') => {
+  csv: (file, sourceLabel = 'csv', projectId = null) => {
     const fd = new FormData()
     fd.append('file', file)
     fd.append('source_label', sourceLabel)
+    if (projectId) fd.append('project_id', projectId)
     return request('/import/csv', { method: 'POST', body: fd })
   },
-  excel: (file, sourceLabel = 'excel') => {
+  excel: (file, sourceLabel = 'excel', projectId = null) => {
     const fd = new FormData()
     fd.append('file', file)
     fd.append('source_label', sourceLabel)
+    if (projectId) fd.append('project_id', projectId)
     return request('/import/excel', { method: 'POST', body: fd })
   },
-  linkedin: (file) => {
+  linkedin: (file, projectId = null) => {
     const fd = new FormData()
     fd.append('file', file)
+    if (projectId) fd.append('project_id', projectId)
     return request('/import/linkedin', { method: 'POST', body: fd })
   },
 }
@@ -77,7 +84,7 @@ export const scrapingApi = {
   getJob: (id) => request(`/scrape/jobs/${id}`),
 }
 
-// Export — these are direct download links, so we build URLs with the token
+// Export — direct download links with token
 export const exportApi = {
   csvUrl: (params = {}) => {
     const token = getToken()
@@ -97,5 +104,8 @@ export const exportApi = {
 
 // Analytics
 export const analyticsApi = {
-  get: () => request('/analytics'),
+  get: (projectId = null) => {
+    const qs = projectId ? `?project_id=${projectId}` : ''
+    return request(`/analytics${qs}`)
+  },
 }
