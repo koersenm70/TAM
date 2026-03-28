@@ -1,8 +1,11 @@
 services:
   - type: web
     name: leadgen
-    runtime: docker
+    env: docker
+    plan: free
     healthCheckPath: /health
     envVars:
-      - key: PORT
-        value: 8000
+      - key: DATABASE_URL
+        sync: false          # set manually in Render dashboard — never commit this value
+      - key: SECRET_KEY
+        generateValue: true  # Render auto-generates a secure random value
